@@ -3,28 +3,21 @@ from telebot import types
 import random
 import string
 from pymongo import MongoClient
+import os
 
-# Replace 'YOUR_BOT_TOKEN' with your actual Telegram bot token
-TOKEN = '5938139823:AAF8SwXNeL9xQB_niIYODUMZWXJh9cWU3_0'
+# Retrieve your bot token and other environment variables from Render.com
+TOKEN = os.environ.get('BOT_TOKEN')
+CHANNEL_ID = int(os.environ.get('CHANNEL_ID'))
+OWNER_USER_ID = int(os.environ.get('OWNER_USER_ID'))
+MONGODB_URI = os.environ.get('MONGODB_URI')
+
+# Initialize the bot
 bot = telebot.TeleBot(TOKEN)
 
-# Replace 'YOUR_CHANNEL_ID' with the ID of your Telegram channel
-CHANNEL_ID = -1001783918221  # Replace with your channel ID
-
-# Replace 'OWNER_USER_ID' with the user ID of the owner
-OWNER_USER_ID = 1778070005  # Replace with the owner's user ID
-
-# Define a list of allowed user IDs who can generate lottery numbers
-allowed_user_ids = [1778070005, 987654321]  # Replace with your allowed user IDs
-
 # Set up MongoDB connection
-# Replace 'YOUR_CONNECTION_STRING' with your MongoDB Atlas connection string
-connection_string = "mongodb+srv://sujithasatheesan8:ZoA8Pqr0jOaC314V@cluster0.54frnzg.mongodb.net/?retryWrites=true&w=majority"
-client = MongoClient(connection_string)
-
-# Access your database and collection
-db = client["cluster0"]
-collection = db["your_collection_name"]
+client = MongoClient(MONGODB_URI)
+db = client.get_default_database()  # Use the default database
+collection = db["your_collection_name"]  # Replace with your collection name
 
 # Initialize dictionaries to store user data
 user_mobile_numbers = {}
@@ -122,7 +115,6 @@ def reset_bot(message):
     else:
         bot.reply_to(message, "You are not authorized to reset the bot.")
 
-
 @bot.message_handler(commands=['list'])
 def list_lottery_numbers(message):
     user_id = message.from_user.id
@@ -181,3 +173,4 @@ def add_user_authorization(message):
 
 if __name__ == '__main__':
     bot.polling()
+                         
