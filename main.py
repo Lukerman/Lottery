@@ -6,7 +6,7 @@ import string
 from pymongo import MongoClient
 
 # Your Telegram bot token
-TOKEN = os.environ['5938139823:AAF8SwXNeL9xQB_niIYODUMZWXJh9cWU3_0']
+TOKEN = os.environ['TELEGRAM_TOKEN']
 bot = telebot.TeleBot(TOKEN)
 
 app = Flask(__name__)
@@ -22,7 +22,7 @@ allowed_user_ids = [1778070005, 987654321]  # Replace with your allowed user IDs
 
 # Set up MongoDB connection
 # Replace 'YOUR_CONNECTION_STRING' with your MongoDB Atlas connection string
-connection_string = os.environ['mongodb+srv://sujithasatheesan8:ZoA8Pqr0jOaC314V@cluster0.54frnzg.mongodb.net/?retryWrites=true&w=majority']
+connection_string = os.environ['MONGODB_URI']
 client = MongoClient(connection_string)
 
 # Access your database and collection
@@ -133,7 +133,6 @@ def reset_bot(message):
     else:
         bot.reply_to(message, "You are not authorized to reset the bot.")
 
-
 @bot.message_handler(commands=['list'])
 def list_lottery_numbers(message):
     user_id = message.from_user.id
@@ -169,8 +168,6 @@ def select_winner(message):
             bot.send_message(CHANNEL_ID, channel_message)
 
             bot.reply_to(message, f"The winner with User ID {user_id} has been notified.")
-    else:
-        bot.reply_to(message, "You are not authorized to select a winner.")
 
 @bot.message_handler(commands=['adduser'])
 def add_user_authorization(message):
@@ -189,5 +186,6 @@ def add_user_authorization(message):
             bot.reply_to(message, "Please reply to a user's message to authorize them to use the bot.")
     else:
         bot.reply_to(message, "You are not authorized to add user authorization.")
+
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
