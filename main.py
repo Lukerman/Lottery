@@ -105,20 +105,20 @@ def reset_bot(message):
         global user_mobile_numbers
         global user_lottery_status
         global lottery_tickets
-        global allowed_user_ids  # Add this line to access the list of allowed users
+        global allowed_user_ids
 
         # Clear user data
         user_mobile_numbers = {}
         user_lottery_status = {}
         lottery_tickets = []
 
-        # Delete all user documents from the MongoDB collection
-        deleted_count = collection.delete_many({}).deleted_count
-
         # Clear the list of allowed users
         allowed_user_ids = []
 
-        bot.reply_to(message, f"Bot has been reset. {deleted_count} user(s) have been removed along with their lottery tickets, and all added users have been deleted.")
+        # Delete all user documents from the MongoDB collection
+        collection.delete_many({})
+
+        bot.reply_to(message, "Bot has been reset. User data, lottery tickets, and user restrictions have been cleared.")
     else:
         bot.reply_to(message, "You are not authorized to reset the bot.")
 
