@@ -1,40 +1,32 @@
-from flask import Flask, request
 import telebot
-import os
+from telebot import types
 import random
 import string
 from pymongo import MongoClient
 
 # Replace 'YOUR_BOT_TOKEN' with your actual Telegram bot token
-TOKEN = '6332642386:AAHwR790oXAj2iQQZh1QrAg0HAiiX8aM97k'
+TOKEN = '5938139823:AAF8SwXNeL9xQB_niIYODUMZWXJh9cWU3_0'
 bot = telebot.TeleBot(TOKEN)
 
-CHANNEL_ID = -1001783918221
+# Replace 'YOUR_CHANNEL_ID' with the ID of your Telegram channel
+CHANNEL_ID = -1001783918221  # Replace with your chaqnnel ID
 
-OWNER_USER_ID = 1778070005
+# Replace 'OWNER_USER_ID' with the user ID of the owner
+OWNER_USER_ID = 1778070005  # Replace with the owner's user ID
 
-allowed_user_ids = [1778070005, 987654321]
+# Define a list of allowed user IDs who can generate lottery numbers
+allowed_user_ids = [1778070005, 987654321]  # Replace with your allowed user IDs
 
-# Your MongoDB setup here
+# Set up MongoDB connection
+# Replace 'YOUR_CONNECTION_STRING' with your MongoDB Atlas connection string
 connection_string ="mongodb+srv://sujithasatheesan8:ZoA8Pqr0jOaC314V@cluster0.54frnzg.mongodb.net/?retryWrites=true&w=majority"
 client = MongoClient(connection_string)
 
-app = Flask(__name__)
-
-# Your MongoDB connection setup here
+# Access your database and collection
 db = client["cluster0"]
-collection = db["your_collection_name_1"]
+collection = db["your_collection_name"]
 
-# Replace 'YOUR_WEBHOOK_URL' with the URL provided by Render.com
-WEBHOOK_URL = 'https://noby.onrender.com'
-
-@app.route('/' + TOKEN, methods=['POST'])
-def webhook():
-    json_str = request.get_data().decode('UTF-8')
-    update = telebot.types.Update.de_json(json_str)
-    bot.process_new_updates([update])
-    return ''
-
+# Initialize dictionaries to store user data
 user_mobile_numbers = {}
 user_lottery_status = {}
 lottery_tickets = []
@@ -113,7 +105,7 @@ def reset_bot(message):
         global user_mobile_numbers
         global user_lottery_status
         global lottery_tickets
-        global allowed_user_ids  # Add this line to access the list of allowed users
+        global allowed_user_ids
 
         # Clear user data
         user_mobile_numbers = {}
@@ -121,12 +113,15 @@ def reset_bot(message):
         lottery_tickets = []
 
         # Delete all user documents from the MongoDB collection
-        deleted_count = collection.delete_many({}).deleted_count
+        collection.delete_many({})
 
         # Clear the list of allowed users
         allowed_user_ids = []
 
-        bot.reply_to(message, f"Bot has been reset. {deleted_count} user(s) have been removed along with their lottery tickets, and all added users have been deleted.")
+        # Delete /list messages from the channel
+        delete_list_messages(CHANNEL_ID, TOKEN)  # Replace with your bot's token
+
+        bot.reply_to(message, "Bot has been reset. User data, lottery tickets, user restrictions, added users, and /list details have been cleared.")
     else:
         bot.reply_to(message, "You are not authorized to reset the bot.")
 
@@ -188,9 +183,4 @@ def add_user_authorization(message):
         bot.reply_to(message, "You are not authorized to add user authorization.")
 
 if __name__ == '__main__':
-    # Delete any previous webhook and set the new one
-    bot.remove_webhook()
-    bot.set_webhook(url=WEBHOOK_URL)
-
-    # Run the Flask app
-    app.run(debug=True)
+    bot.polling()
