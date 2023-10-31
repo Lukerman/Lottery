@@ -1,32 +1,40 @@
+from flask import Flask, request
 import telebot
-from telebot import types
+import os
 import random
 import string
 from pymongo import MongoClient
 
 # Replace 'YOUR_BOT_TOKEN' with your actual Telegram bot token
-TOKEN = '5938139823:AAF8SwXNeL9xQB_niIYODUMZWXJh9cWU3_0'
+TOKEN = '6332642386:AAHwR790oXAj2iQQZh1QrAg0HAiiX8aM97k'
 bot = telebot.TeleBot(TOKEN)
 
-# Replace 'YOUR_CHANNEL_ID' with the ID of your Telegram channel
-CHANNEL_ID = -1001783918221  # Replace with your channel ID
+CHANNEL_ID = -1001783918221
 
-# Replace 'OWNER_USER_ID' with the user ID of the owner
-OWNER_USER_ID = 1778070005 # Replace with the owner's user ID
+OWNER_USER_ID = 1778070005
 
-# Define a list of allowed user IDs who can generate lottery numbers
-allowed_user_ids = [1778070005, 987654321]  # Replace with your allowed user IDs
+allowed_user_ids = [1778070005, 987654321]
 
-# Set up MongoDB connection
-# Replace 'YOUR_CONNECTION_STRING' with your MongoDB Atlas connection string
-connection_string = "mongodb+srv://sujithasatheesan8:ZoA8Pqr0jOaC314V@cluster0.54frnzg.mongodb.net/?retryWrites=true&w=majority"
+# Your MongoDB setup here
+connection_string ="mongodb+srv://sujithasatheesan8:ZoA8Pqr0jOaC314V@cluster0.54frnzg.mongodb.net/?retryWrites=true&w=majority"
 client = MongoClient(connection_string)
 
-# Access your database and collection
-db = client["cluster0"]
-collection = db["your_collection_name"]
+app = Flask(__name__)
 
-# Initialize dictionaries to store user data
+# Your MongoDB connection setup here
+db = client["cluster0"]
+collection = db["your_collection_name_1"]
+
+# Replace 'YOUR_WEBHOOK_URL' with the URL provided by Render.com
+WEBHOOK_URL = 'https://noby.onrender.com'
+
+@app.route('/' + TOKEN, methods=['POST'])
+def webhook():
+    json_str = request.get_data().decode('UTF-8')
+    update = telebot.types.Update.de_json(json_str)
+    bot.process_new_updates([update])
+    return ''
+
 user_mobile_numbers = {}
 user_lottery_status = {}
 lottery_tickets = []
@@ -96,7 +104,7 @@ def generate_lottery_numbers(message):
             lottery_tickets.append((user_id, mobile_number, ticket))
     else:
         bot.reply_to(message, "Sorry, you are not authorized to generate lottery numbers.")
-        bot.reply_to(message, "If you want to generate The lottery you contact me at pm @Jobgodfree_bot .")
+
 @bot.message_handler(commands=['reset'])
 def reset_bot(message):
     user_id = message.from_user.id
@@ -105,7 +113,7 @@ def reset_bot(message):
         global user_mobile_numbers
         global user_lottery_status
         global lottery_tickets
-        global allowed_user_ids
+        global allowed_user_ids  # Add this line to access the list of allowed users
 
         # Clear user data
         user_mobile_numbers = {}
@@ -113,18 +121,16 @@ def reset_bot(message):
         lottery_tickets = []
 
         # Delete all user documents from the MongoDB collection
-        collection.delete_many({})
+        deleted_count = collection.delete_many({}).deleted_count
 
         # Clear the list of allowed users
         allowed_user_ids = []
 
-        # Delete /list messages from the channel
-        delete_list_messages(CHANNEL_ID, TOKEN)  # Replace with your bot's token
-
-        bot.reply_to(message, "Bot has been reset. User data, lottery tickets, user restrictions, added user.")
+        bot.reply_to(message, f"Bot has been reset. {deleted_count} user(s) have been removed along with their lottery tickets, and all added users have been deleted.")
     else:
         bot.reply_to(message, "You are not authorized to reset the bot.")
-        
+
+
 @bot.message_handler(commands=['list'])
 def list_lottery_numbers(message):
     user_id = message.from_user.id
@@ -180,23 +186,11 @@ def add_user_authorization(message):
             bot.reply_to(message, "Please reply to a user's message to authorize them to use the bot.")
     else:
         bot.reply_to(message, "You are not authorized to add user authorization.")
-        
-@bot.message_handler(commands=['broadcast'])
-def broadcast_message(message):
-    user_id = message.from_user.id
-
-    if user_id == OWNER_USER_ID:
-        bot.reply_to(message, "Please enter the message you want to broadcast to all users.")
-        bot.register_next_step_handler(message, process_broadcast_message)
-    else:
-        bot.reply_to(message, "You are not authorized to send a broadcast message.")
-
-def process_broadcast_message(message):
-    broadcast_text = message.text
-
-    for user_id in user_mobile_numbers.keys():
-        if user_id != OWNER_USER_ID:
-            bot.send_message(user_id, broadcast_text)
 
 if __name__ == '__main__':
-    bot.polling()
+    # Delete any previous webhook and set the new one
+    bot.remove_webhook()
+    bot.set_webhook(url=WEBHOOK_URL)
+
+    # Run the Flask app
+    app.run(debug=True)
