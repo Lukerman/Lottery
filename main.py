@@ -12,7 +12,7 @@ bot = telebot.TeleBot(TOKEN)
 CHANNEL_ID = -1001783918221  # Replace with your channel ID
 
 # Replace 'OWNER_USER_ID' with the user ID of the owner
-OWNER_USER_ID = 1778070005  # Replace with the owner's user ID
+OWNER_USER_ID = 1778070006  # Replace with the owner's user ID
 
 # Define a list of allowed user IDs who can generate lottery numbers
 allowed_user_ids = [1778070006, 987654321]  # Replace with your allowed user IDs
