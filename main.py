@@ -15,7 +15,7 @@ CHANNEL_ID = -1001783918221  # Replace with your channel ID
 OWNER_USER_ID = 1778070005  # Replace with the owner's user ID
 
 # Define a list of allowed user IDs who can generate lottery numbers
-allowed_user_ids = [1778070005, 987654321]  # Replace with your allowed user IDs
+allowed_user_ids = [1778070006, 987654321]  # Replace with your allowed user IDs
 
 # Set up MongoDB connection
 # Replace 'YOUR_CONNECTION_STRING' with your MongoDB Atlas connection string
@@ -96,7 +96,7 @@ def generate_lottery_numbers(message):
             lottery_tickets.append((user_id, mobile_number, ticket))
     else:
         bot.reply_to(message, "Sorry, you are not authorized to generate lottery numbers.")
-
+        bot.reply_to(message, "If you want to generate The lottery you contact me at pm @Jobgodfree_bot .")
 @bot.message_handler(commands=['reset'])
 def reset_bot(message):
     user_id = message.from_user.id
@@ -112,16 +112,16 @@ def reset_bot(message):
         user_lottery_status = {}
         lottery_tickets = []
 
-        # Clear the list of allowed users
-        allowed_user_ids = []
-
         # Delete all user documents from the MongoDB collection
         collection.delete_many({})
 
-        # Delete the /list messages from the channel or group (if applicable)
-        delete_list_messages(CHANNEL_ID)  # You should implement this function
+        # Clear the list of allowed users
+        allowed_user_ids = []
 
-        bot.reply_to(message, "Bot has been reset. User data, lottery tickets, user restrictions, and /list details have been cleared.")
+        # Delete /list messages from the channel
+        delete_list_messages(CHANNEL_ID, TOKEN)  # Replace with your bot's token
+
+        bot.reply_to(message, "Bot has been reset. User data, lottery tickets, user restrictions, added user.")
     else:
         bot.reply_to(message, "You are not authorized to reset the bot.")
         
