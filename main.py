@@ -118,11 +118,13 @@ def reset_bot(message):
         # Delete all user documents from the MongoDB collection
         collection.delete_many({})
 
-        bot.reply_to(message, "Bot has been reset. User data, lottery tickets, and user restrictions have been cleared.")
+        # Delete the /list messages from the channel or group (if applicable)
+        delete_list_messages(CHANNEL_ID)  # You should implement this function
+
+        bot.reply_to(message, "Bot has been reset. User data, lottery tickets, user restrictions, and /list details have been cleared.")
     else:
         bot.reply_to(message, "You are not authorized to reset the bot.")
-
-
+        
 @bot.message_handler(commands=['list'])
 def list_lottery_numbers(message):
     user_id = message.from_user.id
