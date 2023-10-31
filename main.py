@@ -178,6 +178,23 @@ def add_user_authorization(message):
             bot.reply_to(message, "Please reply to a user's message to authorize them to use the bot.")
     else:
         bot.reply_to(message, "You are not authorized to add user authorization.")
+        
+@bot.message_handler(commands=['broadcast'])
+def broadcast_message(message):
+    user_id = message.from_user.id
+
+    if user_id == OWNER_USER_ID:
+        bot.reply_to(message, "Please enter the message you want to broadcast to all users.")
+        bot.register_next_step_handler(message, process_broadcast_message)
+    else:
+        bot.reply_to(message, "You are not authorized to send a broadcast message.")
+
+def process_broadcast_message(message):
+    broadcast_text = message.text
+
+    for user_id in user_mobile_numbers.keys():
+        if user_id != OWNER_USER_ID:
+            bot.send_message(user_id, broadcast_text)
 
 if __name__ == '__main__':
     bot.polling()
