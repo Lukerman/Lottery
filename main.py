@@ -5,7 +5,7 @@ import string
 from pymongo import MongoClient
 
 # Replace 'YOUR_BOT_TOKEN' with your actual Telegram bot token
-TOKEN = 'YOUR_BOT_TOKEN'
+TOKEN = '5938139823:AAF8SwXNeL9xQB_niIYODUMZWXJh9cWU3_0'
 bot = telebot.TeleBot(TOKEN)
 
 # Replace 'YOUR_CHANNEL_ID' with the ID of your Telegram channel
@@ -19,7 +19,7 @@ allowed_user_ids = [1778070005, 987654321]  # Replace with your allowed user IDs
 
 # Set up MongoDB connection
 # Replace 'YOUR_CONNECTION_STRING' with your MongoDB Atlas connection string
-connection_string = "YOUR_MONGODB_CONNECTION_STRING"
+connection_string = "mongodb+srv://sujithasatheesan8:ZoA8Pqr0jOaC314V@cluster0.54frnzg.mongodb.net/?retryWrites=true&w=majority"
 client = MongoClient(connection_string)
 
 # Access your database and collection
@@ -31,7 +31,7 @@ user_mobile_numbers = {}
 user_lottery_status = {}
 lottery_tickets = []
 
-# Load user data from MongoDB on bot startup
+# Load user data and lottery tickets from MongoDB on bot startup
 for document in collection.find():
     user_id = document["user_id"]
     mobile_number = document["mobile_number"]
@@ -94,6 +94,34 @@ def generate_lottery_numbers(message):
 
             # Update in-memory lottery_tickets list
             lottery_tickets.append((user_id, mobile_number, ticket))
+    else:
+        bot.reply_to(message, "Sorry, you are not authorized to generate lottery numbers.")
+
+@bot.message_handler(commands=['reset'])
+def reset_bot(message):
+    user_id = message.from_user.id
+
+    if user_id == OWNER_USER_ID:
+        global user_mobile_numbers
+        global user_lottery_status
+        global lottery_tickets
+        global allowed_user_ids  # Add this line to access the list of allowed users
+
+        # Clear user data
+        user_mobile_numbers = {}
+        user_lottery_status = {}
+        lottery_tickets = []
+
+        # Delete all user documents from the MongoDB collection
+        deleted_count = collection.delete_many({}).deleted_count
+
+        # Clear the list of allowed users
+        allowed_user_ids = []
+
+        bot.reply_to(message, f"Bot has been reset. {deleted_count} user(s) have been removed along with their lottery tickets, and all added users have been deleted.")
+    else:
+        bot.reply_to(message, "You are not authorized to reset the bot.")
+
 
 @bot.message_handler(commands=['list'])
 def list_lottery_numbers(message):
@@ -130,6 +158,8 @@ def select_winner(message):
             bot.send_message(CHANNEL_ID, channel_message)
 
             bot.reply_to(message, f"The winner with User ID {user_id} has been notified.")
+    else:
+        bot.reply_to(message, "You are not authorized to select a winner.")
 
 @bot.message_handler(commands=['adduser'])
 def add_user_authorization(message):
@@ -148,22 +178,6 @@ def add_user_authorization(message):
             bot.reply_to(message, "Please reply to a user's message to authorize them to use the bot.")
     else:
         bot.reply_to(message, "You are not authorized to add user authorization.")
-
-@bot.message_handler(commands=['reset'])
-def reset_bot(message):
-    user_id = message.from_user.id
-
-    if user_id == OWNER_USER_ID:
-        # Clear user data and restrictions
-        user_mobile_numbers.clear()
-        user_lottery_status.clear()
-
-        # Delete all user documents from the MongoDB collection
-        collection.delete_many({})
-
-        bot.reply_to(message, "Bot has been reset. All user data and restrictions have been cleared.")
-    else:
-        bot.reply_to(message, "You are not authorized to reset the bot.")
 
 if __name__ == '__main__':
     bot.polling()
