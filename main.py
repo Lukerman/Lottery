@@ -5,21 +5,21 @@ import string
 from pymongo import MongoClient
 
 # Replace 'YOUR_BOT_TOKEN' with your actual Telegram bot token
-TOKEN = '5938139823:AAF8SwXNeL9xQB_niIYODUMZWXJh9cWU3_0'
+TOKEN = '6332642386:AAHwR790oXAj2iQQZh1QrAg0HAiiX8aM97k'
 bot = telebot.TeleBot(TOKEN)
 
 # Replace 'YOUR_CHANNEL_ID' with the ID of your Telegram channel
-CHANNEL_ID = -1001783918221  # Replace with your chaqnnel ID
+CHANNEL_ID = -1001783918221  # Replace with your channel ID
 
 # Replace 'OWNER_USER_ID' with the user ID of the owner
 OWNER_USER_ID = 1778070005  # Replace with the owner's user ID
 
 # Define a list of allowed user IDs who can generate lottery numbers
-allowed_user_ids = [1778070005, 987654321]  # Replace with your allowed user IDs
+allowed_user_ids = [OWNER_USER_ID]  # Replace with your allowed user IDs
 
 # Set up MongoDB connection
 # Replace 'YOUR_CONNECTION_STRING' with your MongoDB Atlas connection string
-connection_string ="mongodb+srv://sujithasatheesan8:ZoA8Pqr0jOaC314V@cluster0.54frnzg.mongodb.net/?retryWrites=true&w=majority"
+connection_string = "mongodb+srv://sujithasatheesan8:ZoA8Pqr0jOaC314V@cluster0.54frnzg.mongodb.net/?retryWrites=true&w=majority"
 client = MongoClient(connection_string)
 
 # Access your database and collection
@@ -39,6 +39,14 @@ for document in collection.find():
     user_mobile_numbers[user_id] = mobile_number
     user_lottery_status[user_id] = True
     lottery_tickets.append((user_id, mobile_number, ticket))
+
+# Price pool parameters
+ticket_price = 10  # The price of a single ticket in rupees
+price_pool_percentage = 80  # The percentage of ticket sales allocated to the prize pool
+def calculate_prize_pool():
+    total_sales = len(lottery_tickets) * ticket_price
+    prize_pool = (total_sales * price_pool_percentage) / 100
+    return prize_pool
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
@@ -94,54 +102,20 @@ def generate_lottery_numbers(message):
 
             # Update in-memory lottery_tickets list
             lottery_tickets.append((user_id, mobile_number, ticket))
+
+            # Calculate the current prize pool
+            prize_pool = calculate_prize_pool()
+
+            # Send the prize pool to the user
+            bot.send_message(user_id, f"Current Prize Pool: {prize_pool} rupees")
+
+            # Send the prize pool to all other users who generated lotteries
+            for user in lottery_tickets:
+                other_user_id, _, _ = user
+                if other_user_id != user_id:
+                    bot.send_message(other_user_id, f"Current Prize Pool: {prize_pool} rupees")
     else:
         bot.reply_to(message, "Sorry, you are not authorized to generate lottery numbers.")
-
-@bot.message_handler(commands=['reset'])
-def reset_bot(message):
-    user_id = message.from_user.id
-
-    if user_id == OWNER_USER_ID:
-        global user_mobile_numbers
-        global user_lottery_status
-        global lottery_tickets
-        global allowed_user_ids
-
-        # Clear user data
-        user_mobile_numbers = {}
-        user_lottery_status = {}
-        lottery_tickets = []
-
-        # Delete all user documents from the MongoDB collection
-        collection.delete_many({})
-
-        # Clear the list of allowed users
-        allowed_user_ids = []
-
-        # Delete /list messages from the channel
-        delete_list_messages(CHANNEL_ID, TOKEN)  # Replace with your bot's token
-
-        bot.reply_to(message, "Bot has been reset. User data, lottery tickets, user restrictions, added users, and /list details have been cleared.")
-    else:
-        bot.reply_to(message, "You are not authorized to reset the bot.")
-
-
-@bot.message_handler(commands=['list'])
-def list_lottery_numbers(message):
-    user_id = message.from_user.id
-
-    if user_id == OWNER_USER_ID:
-        lottery_list = []
-        for index, (user_id, mobile_number, ticket) in enumerate(lottery_tickets, start=1):
-            lottery_list.append(f"{index}. User ID: {user_id}, Mobile Number: {mobile_number}, Ticket: {ticket}")
-
-        if lottery_list:
-            response = "\n".join(lottery_list)
-            bot.send_message(user_id, "List of generated lottery numbers:\n" + response)
-        else:
-            bot.reply_to(message, "No lottery numbers have been generated yet.")
-    else:
-        bot.reply_to(message, "You are not authorized to view the list.")
 
 @bot.message_handler(commands=['winner'])
 def select_winner(message):
@@ -156,31 +130,46 @@ def select_winner(message):
             user_message = f"Congratulations! You are the winner of the lottery.\nLottery Ticket: {ticket}"
             bot.send_message(user_id, user_message)
 
+            # Calculate the prize for the winner
+            total_sales = len(lottery_tickets) * ticket_price
+            prize = (total_sales * price_pool_percentage) / 100
+            bot.send_message(user_id, f"You have won {prize} rupees!")
+
             # Send the winner's info to the channel
-            channel_message = f"Winner selected:\nUser ID: {user_id}\nMobile Number: {mobile_number}\nTicket: {ticket}"
+            channel_message = f"Winner selected:\nUser ID: {user_id}\nMobile Number: {mobile_number}\nTicket: {ticket}\nPrize: {prize} rupees"
             bot.send_message(CHANNEL_ID, channel_message)
+
+            # Send a list of all users' lottery tickets, mobile numbers, and user IDs to the channel
+            all_users_info = "\n".join([f"User ID: {user[0]}, Mobile Number: {user[1]}, Ticket: {user[2]}" for user in lottery_tickets])
+            bot.send_message(CHANNEL_ID, f"List of All Users' Lottery Tickets:\n{all_users_info}")
 
             bot.reply_to(message, f"The winner with User ID {user_id} has been notified.")
     else:
         bot.reply_to(message, "You are not authorized to select a winner.")
 
 @bot.message_handler(commands=['adduser'])
-def add_user_authorization(message):
+def add_user(message):
     user_id = message.from_user.id
 
     if user_id == OWNER_USER_ID:
-        if message.reply_to_message and message.reply_to_message.from_user:
-            authorized_user_id = message.reply_to_message.from_user.id
-            if authorized_user_id not in allowed_user_ids:
-                allowed_user_ids.append(authorized_user_id)
-                collection.update_one({"user_id": authorized_user_id}, {"$set": {"is_authorized": True}}, upsert=True)
-                bot.reply_to(message, f"User with ID {authorized_user_id} has been authorized to use the bot.")
-            else:
-                bot.reply_to(message, f"User with ID {authorized_user_id} is already authorized.")
-        else:
-            bot.reply_to(message, "Please reply to a user's message to authorize them to use the bot.")
+        bot.reply_to(message, "Please enter the user's Telegram User ID to add them as an allowed user.")
+        bot.register_next_step_handler(message, process_add_user)
     else:
-        bot.reply_to(message, "You are not authorized to add user authorization.")
+        bot.reply_to(message, "You are not authorized to add users.")
 
+@bot.message_handler(commands=['reset'])
+def reset_bot(message):
+    user_id = message.from_user.id
+
+    if user_id == OWNER_USER_ID:
+        bot.reply_to(message, "Bot data has been reset. You can now start fresh.")
+        # Clear all user data, including user authorities, and lottery tickets
+        user_mobile_numbers.clear()
+        user_lottery_status.clear()
+        lottery_tickets.clear()
+        allowed_user_ids = [OWNER_USER_ID]  # Reset allowed user IDs to include only the owner
+    else:
+        bot.reply_to(message, "You are not authorized to reset the bot.")
+      
 if __name__ == '__main__':
     bot.polling()
