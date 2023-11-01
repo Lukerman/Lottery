@@ -157,6 +157,51 @@ def add_user(message):
     else:
         bot.reply_to(message, "You are not authorized to add users.")
 
+def process_add_user(message):
+    owner_id = message.from_user.id
+    user_id_to_add = message.text
+
+    if not user_id_to_add.isdigit():
+        bot.reply_to(message, "Please enter a valid numeric User ID.")
+        bot.register_next_step_handler(message, process_add_user)
+    else:
+        user_id_to_add = int(user_id_to_add)
+
+        if user_id_to_add in allowed_user_ids:
+            bot.reply_to(message, "This user is already allowed to generate lottery numbers.")
+        else:
+            allowed_user_ids.append(user_id_to_add)
+            bot.reply_to(message, f"User with User ID {user_id_to_add} has been added as an allowed user.")
+
+            # Send a message to the channel
+            bot.send_message(CHANNEL_ID, f"New User Added: User ID {user_id_to_add}")
+
+            # Send a message to the owner
+            bot.send_message(OWNER_USER_ID, f"User with User ID {user_id_to_add} has been added as an allowed user.")
+
+            # Send a message to the newly added user
+            bot.send_message(user_id_to_add, "You have been added as an allowed user. You can now generate lottery tickets by typing /generate.")
+
+@bot.message_handler(commands=['list'])
+def list_users_data(message):
+    user_id = message.from_user.id
+
+    if user_id == OWNER_USER_ID:
+        user_data_list = []
+        for user in lottery_tickets:
+            user_id, mobile_number, ticket = user
+            user_data = f"User ID: {user_id}, Mobile Number: {mobile_number}, Ticket: {ticket}"
+            user_data_list.append(user_data)
+        
+        # Calculate the current prize pool
+        prize_pool = calculate_prize_pool()
+        user_data_list.append(f"Current Prize Pool: {prize_pool} rupees")
+
+        user_data_text = "\n".join(user_data_list)
+        bot.send_message(user_id, "List of All Users' Lottery Tickets and Data:\n" + user_data_text)
+    else:
+        bot.reply_to(message, "You are not authorized to access the user data list.")
+
 @bot.message_handler(commands=['reset'])
 def reset_bot(message):
     user_id = message.from_user.id
@@ -170,6 +215,6 @@ def reset_bot(message):
         allowed_user_ids = [OWNER_USER_ID]  # Reset allowed user IDs to include only the owner
     else:
         bot.reply_to(message, "You are not authorized to reset the bot.")
-      
+          
 if __name__ == '__main__':
     bot.polling()
