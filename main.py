@@ -48,6 +48,16 @@ def calculate_prize_pool():
     prize_pool = (total_sales * price_pool_percentage) / 100
     return prize_pool
 
+def reset_bot_data():
+    # Clear all user data, including user authorities, and lottery tickets
+    user_mobile_numbers.clear()
+    user_lottery_status.clear()
+    lottery_tickets.clear()
+
+    # Reset allowed user IDs to include only the owner
+    allowed_user_ids.clear()
+    allowed_user_ids.append(OWNER_USER_ID)
+
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
     user_id = message.from_user.id
@@ -207,14 +217,10 @@ def reset_bot(message):
     user_id = message.from_user.id
 
     if user_id == OWNER_USER_ID:
+        reset_bot_data()
         bot.reply_to(message, "Bot data has been reset. You can now start fresh.")
-        # Clear all user data, including user authorities, and lottery tickets
-        user_mobile_numbers.clear()
-        user_lottery_status.clear()
-        lottery_tickets.clear()
-        allowed_user_ids = [OWNER_USER_ID]  # Reset allowed user IDs to include only the owner
     else:
         bot.reply_to(message, "You are not authorized to reset the bot.")
-          
+        
 if __name__ == '__main__':
     bot.polling()
