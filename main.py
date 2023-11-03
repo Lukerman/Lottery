@@ -217,8 +217,17 @@ def reset_bot(message):
     user_id = message.from_user.id
 
     if user_id == OWNER_USER_ID:
-        reset_bot_data()
-        bot.reply_to(message, "Bot data has been reset. You can now start fresh.")
+        # Delete all lottery tickets from the database
+        collection.delete_many({})
+
+        # Clear the lottery_tickets list
+        lottery_tickets.clear()
+
+        # Reset the allowed_user_ids to include only the owner
+        allowed_user_ids.clear()
+        allowed_user_ids.append(OWNER_USER_ID)
+
+        bot.reply_to(message, "All lottery tickets and authorized users (except the owner) have been reset.")
     else:
         bot.reply_to(message, "You are not authorized to reset the bot.")
         
