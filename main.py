@@ -228,6 +228,11 @@ def reset_bot(message):
         allowed_user_ids.append(OWNER_USER_ID)
 
         bot.reply_to(message, "All lottery tickets and authorized users (except the owner) have been reset.")
+
+        # Notify users about the bot restart and a new lottery event
+        for user in user_mobile_numbers.keys():
+            bot.send_message(user, "The bot has been restarted, and a new lottery event has started. You can now generate lottery numbers.")
+
     else:
         bot.reply_to(message, "You are not authorized to reset the bot.")
         
