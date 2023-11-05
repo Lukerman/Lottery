@@ -83,7 +83,7 @@ def generate_lottery_numbers(message):
     user_id = message.from_user.id
 
     if user_id not in user_mobile_numbers:
-        bot.reply_to(message, "Please send your mobile number to register first.")
+        bot.reply_to(message, "Type /start")
         return
 
     if user_id in allowed_user_ids:
@@ -125,8 +125,8 @@ def generate_lottery_numbers(message):
                 if other_user_id != user_id:
                     bot.send_message(other_user_id, f"Current Prize Pool: {prize_pool} rupees")
     else:
-        bot.reply_to(message, "Sorry, you are not authorized to generate lottery numbers.")
-
+        bot.reply_to(message, "Sorry, you are not authorized to generate lottery numbers. If you want to generate lottery ticket the contact @Lukerman_135. One lottery ticket price is 10 rupees")
+        bot.reply_to(message, "This is the upi id to pay the cash 9895944321.wallet@paytm and sent the screenshot to the pm chat @Lukerman_135")
 @bot.message_handler(commands=['winner'])
 def select_winner(message):
     user_id = message.from_user.id
