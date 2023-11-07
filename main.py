@@ -5,7 +5,7 @@ import string
 from pymongo import MongoClient
 
 # Replace 'YOUR_BOT_TOKEN' with your actual Telegram bot token
-TOKEN = '6332642386:AAHwR790oXAj2iQQZh1QrAg0HAiiX8aM97k'
+TOKEN = '6441404344:AAFmwRPxIP7KIiFE5KYATu259ph11C9oLqQ'
 bot = telebot.TeleBot(TOKEN)
 
 # Replace 'YOUR_CHANNEL_ID' with the ID of your Telegram channel
