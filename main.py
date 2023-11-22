@@ -43,10 +43,13 @@ for document in collection.find():
 # Price pool parameters
 ticket_price = 10  # The price of a single ticket in rupees
 price_pool_percentage = 80  # The percentage of ticket sales allocated to the prize pool
+
+
 def calculate_prize_pool():
     total_sales = len(lottery_tickets) * ticket_price
     prize_pool = (total_sales * price_pool_percentage) / 100
     return prize_pool
+
 
 def reset_bot_data():
     # Clear all user data, including user authorities, and lottery tickets
@@ -58,14 +61,17 @@ def reset_bot_data():
     allowed_user_ids.clear()
     allowed_user_ids.append(OWNER_USER_ID)
 
+
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
     user_id = message.from_user.id
     if user_id in user_mobile_numbers:
-        bot.reply_to(message, "Welcome to the Lottery Number Generator Bot! Send /generate to get your lottery number (one per user).")
+        bot.reply_to(message,
+                     "Welcome to the Lottery Number Generator Bot! Send /generate to get your lottery number (one per user).")
     else:
         bot.reply_to(message, "To get started, please send your mobile number to register.")
         bot.register_next_step_handler(message, process_mobile_number)
+
 
 def process_mobile_number(message):
     user_id = message.from_user.id
@@ -76,7 +82,9 @@ def process_mobile_number(message):
         bot.register_next_step_handler(message, process_mobile_number)
     else:
         user_mobile_numbers[user_id] = mobile_number
-        bot.reply_to(message, "Mobile number registered successfully. You can now generate a lottery number by typing /generate.")
+        bot.reply_to(message,
+                     "Mobile number registered successfully. You can now generate a lottery number by typing /generate.")
+
 
 @bot.message_handler(commands=['generate'])
 def generate_lottery_numbers(message):
@@ -90,7 +98,7 @@ def generate_lottery_numbers(message):
         if user_id in user_lottery_status and user_lottery_status[user_id]:
             bot.reply_to(message, "Sorry, you have already generated a lottery number.")
         else:
-            num_digits = 4   # Number of random digits
+            num_digits = 4  # Number of random digits
             num_letters = 2  # Number of random uppercase letters
 
             letters = ''.join(random.choice(string.ascii_uppercase) for _ in range(num_letters))
@@ -125,8 +133,12 @@ def generate_lottery_numbers(message):
                 if other_user_id != user_id:
                     bot.send_message(other_user_id, f"Current Prize Pool: {prize_pool} rupees")
     else:
-        bot.reply_to(message, "Sorry, you are not authorized to generate lottery numbers. If you want to generate lottery ticket the contact @Lukerman_135. One lottery ticket price is 10 rupees")
-        bot.reply_to(message, "This is the upi id to pay the cash 9895944321.wallet@paytm and sent the screenshot to the pm chat @Lukerman_135")
+        bot.reply_to(message,
+                     "Sorry, you are not authorized to generate lottery numbers. If you want to generate lottery ticket contact @Lukerman_135. One lottery ticket price is 10 rupees")
+        bot.reply_to(message,
+                     "This is the UPI ID to pay the cash 9895944321.wallet@paytm and send the screenshot to the pm chat @Lukerman_135")
+
+
 @bot.message_handler(commands=['winner'])
 def select_winner(message):
     user_id = message.from_user.id
@@ -150,12 +162,15 @@ def select_winner(message):
             bot.send_message(CHANNEL_ID, channel_message)
 
             # Send a list of all users' lottery tickets, mobile numbers, and user IDs to the channel
-            all_users_info = "\n".join([f"User ID: {user[0]}, Mobile Number: {user[1]}, Ticket: {user[2]}" for user in lottery_tickets])
-            bot.send_message(CHANNEL_ID, f"List of All Users' Lottery Tickets:\n{all_users_info}")
+            all_users_info = "\n".join(
+                [f"User ID: {user[0]}, Mobile Number: {user[1]}, Ticket: {user[2]}" for user in lottery_tickets])
+            bot.send_message(CHANNEL_ID,
+                             f"List of All Users' Lottery Tickets:\n{all_users_info}")
 
             bot.reply_to(message, f"The winner with User ID {user_id} has been notified.")
     else:
         bot.reply_to(message, "You are not authorized to select a winner.")
+
 
 @bot.message_handler(commands=['adduser'])
 def add_user(message):
@@ -166,6 +181,7 @@ def add_user(message):
         bot.register_next_step_handler(message, process_add_user)
     else:
         bot.reply_to(message, "You are not authorized to add users.")
+
 
 def process_add_user(message):
     owner_id = message.from_user.id
@@ -190,7 +206,9 @@ def process_add_user(message):
             bot.send_message(OWNER_USER_ID, f"User with User ID {user_id_to_add} has been added as an allowed user.")
 
             # Send a message to the newly added user
-            bot.send_message(user_id_to_add, "You have been added as an allowed user. You can now generate lottery tickets by typing /generate.")
+            bot.send_message(user_id_to_add,
+                             "You have been added as an allowed user. You can now generate lottery tickets by typing /generate.")
+
 
 @bot.message_handler(commands=['list'])
 def list_users_data(message):
@@ -202,7 +220,7 @@ def list_users_data(message):
             user_id, mobile_number, ticket = user
             user_data = f"User ID: {user_id}, Mobile Number: {mobile_number}, Ticket: {ticket}"
             user_data_list.append(user_data)
-        
+
         # Calculate the current prize pool
         prize_pool = calculate_prize_pool()
         user_data_list.append(f"Current Prize Pool: {prize_pool} rupees")
@@ -211,6 +229,7 @@ def list_users_data(message):
         bot.send_message(user_id, "List of All Users' Lottery Tickets and Data:\n" + user_data_text)
     else:
         bot.reply_to(message, "You are not authorized to access the user data list.")
+
 
 @bot.message_handler(commands=['reset'])
 def reset_bot(message):
@@ -235,6 +254,7 @@ def reset_bot(message):
 
     else:
         bot.reply_to(message, "You are not authorized to reset the bot.")
-        
+
+
 if __name__ == '__main__':
     bot.polling()
