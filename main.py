@@ -33,12 +33,14 @@ lottery_tickets = []
 
 # Load user data and lottery tickets from MongoDB on bot startup
 for document in collection.find():
-    user_id = document["user_id"]
-    mobile_number = document["mobile_number"]
-    ticket = document["ticket"]
-    user_mobile_numbers[user_id] = str(mobile_number)
-    user_lottery_status[user_id] = True
-    lottery_tickets.append((user_id, str(mobile_number), ticket))
+    user_id = document.get("user_id")
+    mobile_number = document.get("mobile_number")
+    ticket = document.get("ticket")
+
+    if user_id and mobile_number and ticket:
+        user_mobile_numbers[user_id] = str(mobile_number)
+        user_lottery_status[user_id] = True
+        lottery_tickets.append((user_id, str(mobile_number), ticket))
 
 # Price pool parameters
 ticket_price = 10  # The price of a single ticket in rupees
@@ -199,7 +201,8 @@ def process_add_user(message):
             # Save the added user to the database
             collection.insert_one({
                 "user_id": user_id_to_add,
-                "allowed_to_generate": True  # Indicate whether the user is allowed to generate lottery numbers
+                "mobile_number": "1234567890",  # Replace with an example mobile number
+                "ticket": "EXAMPLE-1234"  # Replace with an example ticket
             })
 
             allowed_user_ids.append(user_id_to_add)
@@ -263,3 +266,4 @@ def reset_bot(message):
 
 if __name__ == '__main__':
     bot.polling()
+     
