@@ -53,17 +53,6 @@ def calculate_prize_pool():
     return prize_pool
 
 
-def reset_bot_data():
-    # Clear all user data, including user authorities, and lottery tickets
-    user_mobile_numbers.clear()
-    user_lottery_status.clear()
-    lottery_tickets.clear()
-
-    # Reset allowed user IDs to include only the owner
-    allowed_user_ids.clear()
-    allowed_user_ids.append(OWNER_USER_ID)
-
-
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
     user_id = message.from_user.id
@@ -136,7 +125,7 @@ def generate_lottery_numbers(message):
                     bot.send_message(other_user_id, f"Current Prize Pool: {prize_pool} rupees")
     else:
         bot.reply_to(message,
-                     "Sorry, you are not authorized to generate lottery numbers. If you want to generate lottery ticket contact @Lukerman_135. One lottery ticket price is 10 rupees")
+                     "Sorry, you are not authorized to generate lottery numbers. If you want to generate a lottery ticket, contact @Lukerman_135. One lottery ticket price is 10 rupees")
         bot.reply_to(message,
                      "This is the UPI ID to pay the cash 9895944321.wallet@paytm and send the screenshot to the pm chat @Lukerman_135")
 
@@ -191,7 +180,6 @@ def process_add_user(message):
 
     if not user_id_to_add.isdigit():
         bot.reply_to(message, "Please enter a valid numeric User ID.")
-        bot.register_next_step_handler(message, process_add_user)
     else:
         user_id_to_add = int(user_id_to_add)
 
@@ -266,4 +254,4 @@ def reset_bot(message):
 
 if __name__ == '__main__':
     bot.polling()
-     
+    
