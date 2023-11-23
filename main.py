@@ -242,6 +242,9 @@ def reset_bot(message):
         allowed_user_ids.clear()
         allowed_user_ids.append(OWNER_USER_ID)
 
+        # Reset user_lottery_status for all users
+        user_lottery_status.clear()
+
         bot.reply_to(message, "All lottery tickets and authorized users (except the owner) have been reset.")
 
         # Notify users about the bot restart and a new lottery event
@@ -250,7 +253,6 @@ def reset_bot(message):
 
     else:
         bot.reply_to(message, "You are not authorized to reset the bot.")
-
 
 if __name__ == '__main__':
     bot.polling()
