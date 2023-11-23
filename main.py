@@ -196,6 +196,12 @@ def process_add_user(message):
         if user_id_to_add in allowed_user_ids:
             bot.reply_to(message, "This user is already allowed to generate lottery numbers.")
         else:
+            # Save the added user to the database
+            collection.insert_one({
+                "user_id": user_id_to_add,
+                "allowed_to_generate": True  # Indicate whether the user is allowed to generate lottery numbers
+            })
+
             allowed_user_ids.append(user_id_to_add)
             bot.reply_to(message, f"User with User ID {user_id_to_add} has been added as an allowed user.")
 
@@ -236,9 +242,8 @@ def reset_bot(message):
     user_id = message.from_user.id
 
     if user_id == OWNER_USER_ID:
-        # Delete all lottery tickets from the database
+        # Delete all lottery tickets and added users from the database
         collection.delete_many({})
-
         # Clear the lottery_tickets list
         lottery_tickets.clear()
 
@@ -258,3 +263,4 @@ def reset_bot(message):
 
 if __name__ == '__main__':
     bot.polling()
+        
