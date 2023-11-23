@@ -36,9 +36,9 @@ for document in collection.find():
     user_id = document["user_id"]
     mobile_number = document["mobile_number"]
     ticket = document["ticket"]
-    user_mobile_numbers[user_id] = mobile_number
+    user_mobile_numbers[user_id] = str(mobile_number)
     user_lottery_status[user_id] = True
-    lottery_tickets.append((user_id, mobile_number, ticket))
+    lottery_tickets.append((user_id, str(mobile_number), ticket))
 
 # Price pool parameters
 ticket_price = 10  # The price of a single ticket in rupees
@@ -81,7 +81,7 @@ def process_mobile_number(message):
         bot.reply_to(message, "Please enter a valid 10-digit mobile number.")
         bot.register_next_step_handler(message, process_mobile_number)
     else:
-        user_mobile_numbers[user_id] = mobile_number
+        user_mobile_numbers[user_id] = str(mobile_number)
         bot.reply_to(message,
                      "Mobile number registered successfully. You can now generate a lottery number by typing /generate.")
 
@@ -263,4 +263,3 @@ def reset_bot(message):
 
 if __name__ == '__main__':
     bot.polling()
-        
