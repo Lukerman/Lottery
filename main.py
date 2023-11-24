@@ -227,13 +227,12 @@ def list_users_data(message):
     else:
         bot.reply_to(message, "You are not authorized to access the user data list.")
 
-
 @bot.message_handler(commands=['reset'])
 def reset_bot(message):
     user_id = message.from_user.id
 
     if user_id == OWNER_USER_ID:
-        # Delete all lottery tickets and added users from the database
+        # Delete all lottery tickets and user data from the database
         collection.delete_many({})
         # Clear the lottery_tickets list
         lottery_tickets.clear()
@@ -245,7 +244,10 @@ def reset_bot(message):
         # Reset user_lottery_status for all users
         user_lottery_status.clear()
 
-        bot.reply_to(message, "All lottery tickets and authorized users (except the owner) have been reset.")
+        # Remove user phone numbers
+        user_mobile_numbers.clear()
+
+        bot.reply_to(message, "All lottery tickets, authorized users (except the owner), and user phone numbers have been reset.")
 
         # Notify users about the bot restart and a new lottery event
         for user in user_mobile_numbers.keys():
@@ -253,7 +255,6 @@ def reset_bot(message):
 
     else:
         bot.reply_to(message, "You are not authorized to reset the bot.")
-
 if __name__ == '__main__':
     bot.polling()
     
