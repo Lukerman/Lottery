@@ -206,7 +206,6 @@ def process_add_user(message):
             bot.send_message(user_id_to_add,
                              "You have been added as an allowed user. You can now generate lottery tickets by typing /generate.")
 
-
 @bot.message_handler(commands=['list'])
 def list_users_data(message):
     user_id = message.from_user.id
@@ -223,10 +222,10 @@ def list_users_data(message):
         user_data_list.append(f"Current Prize Pool: {prize_pool} rupees")
 
         user_data_text = "\n".join(user_data_list)
-        bot.send_message(user_id, "List of All Users' Lottery Tickets and Data:\n" + user_data_text)
+        bot.send_message(OWNER_USER_ID, "List of All Users' Lottery Tickets and Data:\n" + user_data_text)
     else:
         bot.reply_to(message, "You are not authorized to access the user data list.")
-
+        
 @bot.message_handler(commands=['reset'])
 def reset_bot(message):
     user_id = message.from_user.id
